@@ -793,7 +793,7 @@ async function procesarImagen(file) {
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': getApiKey(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
@@ -851,6 +851,15 @@ Reglas: monto como número con punto decimal. Solo incluí los tipos con monto >
     }
   };
   reader.readAsDataURL(file);
+}
+
+function getApiKey() {
+  let key = localStorage.getItem('anthropic_api_key');
+  if (!key) {
+    key = prompt('Ingresá tu API key de Anthropic:');
+    if (key) localStorage.setItem('anthropic_api_key', key);
+  }
+  return key || '';
 }
 </script>
 
