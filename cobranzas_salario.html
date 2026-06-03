@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Cobranzas & Salario</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f4f2;
+  --surface: #ffffff;
+  --surface2: #f0efed;
+  --border: #e2e0dc;
+  --text: #1a1a18;
+  --muted: #888580;
+  --green: #1e6b3c;
+  --green-bg: #eaf4ee;
+  --red: #c0392b;
+  --amber: #b8640a;
+  --amber-bg: #fef5e7;
+  --blue: #1a4f8a;
+  --blue-bg: #eaf1fb;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
+
+header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1rem; position: sticky; top: 0; z-index: 100; }
+.header-inner { display: flex; align-items: center; justify-content: space-between; height: 54px; }
+.logo { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+.logo span { color: var(--green); }
+.icon-btn { background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 10px; font-size: 13px; font-family: 'DM Sans', sans-serif; color: var(--text); cursor: pointer; }
+.icon-btn:active { background: var(--surface2); }
+
+.tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
+.tab { flex: 1; padding: 10px 8px; font-size: 12px; font-weight: 500; color: var(--muted); border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+.tab.active { color: var(--text); border-bottom-color: var(--text); }
+
+.view { display: none; padding: 1rem; }
+.view.active { display: block; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 10px; }
+.card-title { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+.stat-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.stat-value { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
+.stat-value.green { color: var(--green); }
+.stat-value.amber { color: var(--amber); }
+
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 5px; font-weight: 500; }
+.field input, .field select { width: 100%; padding: 10px 12px; font-size: 15px; font-family: 'DM Sans', sans-serif; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); outline: none; transition: border-color 0.15s; }
+.field input:focus, .field select:focus { border-color: var(--green); }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.pago-bloque { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px; background: var(--bg); }
+.pago-bloque-header { display: flex; align-items: center; justify-content: space-between; }
+.pago-toggle { display: flex; align-items: center; gap: 8px; }
+.pago-toggle input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--green); cursor: pointer; flex-shrink: 0; }
+.pago-toggle label { font-size: 14px; font-weight: 600; cursor: pointer; }
+.pago-cuerpo { display: none; margin-top: 10px; }
+.pago-cuerpo.visible { display: block; }
+
+.btn { display: block; width: 100%; padding: 12px; font-size: 15px; font-weight: 600; font-family: 'DM Sans', sans-serif; border: none; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.15s; text-align: center; }
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: var(--text); color: #fff; }
+.btn-outline { background: none; border: 1px solid var(--border); color: var(--text); }
+.btn-sm { padding: 6px 12px; font-size: 13px; width: auto; display: inline-block; }
+
+.periodo-row { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; scrollbar-width: none; }
+.periodo-row::-webkit-scrollbar { display: none; }
+.periodo-btn { padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px; font-size: 13px; font-weight: 500; background: var(--surface); color: var(--muted); cursor: pointer; white-space: nowrap; }
+.periodo-btn.active { background: var(--text); color: #fff; border-color: var(--text); }
+
+.cobro-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 8px; }
+.cobro-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.cobro-cliente { font-weight: 600; font-size: 15px; }
+.cobro-total { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 17px; color: var(--green); }
+.cobro-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.pagos-lista { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.pago-linea { display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
+.pago-linea-left { display: flex; align-items: center; gap: 6px; }
+.pago-monto { font-weight: 600; }
+.pago-comis { font-size: 11px; color: var(--green); }
+.pago-pend-txt { font-size: 11px; color: var(--amber); }
+.cobro-acciones { margin-top: 10px; }
+
+.badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+.badge-ef { background: var(--green-bg); color: var(--green); }
+.badge-dep { background: var(--blue-bg); color: var(--blue); }
+.badge-chq-ok { background: var(--amber-bg); color: var(--amber); }
+.badge-chq-pend { background: #fff3cd; color: #856404; }
+.badge-comis { background: var(--green-bg); color: var(--green); }
+
+.modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: flex-end; }
+.modal-backdrop.open { display: flex; }
+.modal { background: var(--surface); border-radius: var(--radius) var(--radius) 0 0; padding: 1.25rem; width: 100%; max-height: 92vh; overflow-y: auto; }
+.modal-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 1rem; }
+.modal-close { float: right; background: none; border: none; font-size: 24px; color: var(--muted); cursor: pointer; line-height: 1; margin-top: -4px; }
+
+#video-container { position: relative; background: #000; border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 12px; }
+#cam-video { width: 100%; display: block; }
+.cam-guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); border: 2px solid rgba(46,204,113,0.9); width: 80%; height: 60%; border-radius: 8px; pointer-events: none; }
+
+.desglose-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.desglose-row:last-child { border-bottom: none; }
+.desglose-label { font-size: 14px; color: var(--muted); }
+.desglose-valor { font-size: 14px; font-weight: 600; }
+.desglose-valor.neg { color: var(--red); }
+.desglose-valor.pos { color: var(--green); }
+.desglose-row.total { padding-top: 10px; margin-top: 4px; border-top: 2px solid var(--text); border-bottom: none; }
+.desglose-row.total .desglose-label { font-weight: 700; font-size: 15px; color: var(--text); }
+.desglose-row.total .desglose-valor { font-size: 18px; color: var(--green); }
+
+.aviso { background: var(--amber-bg); border: 1px solid #f5d090; border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 10px; font-size: 13px; color: var(--amber); }
+.scan-info { background: var(--green-bg); border: 1px solid #b8e2c8; border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 12px; font-size: 13px; }
+.total-preview { background: var(--surface2); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+.total-preview-label { font-size: 13px; color: var(--muted); }
+.total-preview-monto { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; color: var(--green); }
+.seccion-label { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; margin-top: 4px; }
+.empty { text-align: center; padding: 2.5rem 1rem; color: var(--muted); }
+.empty-icon { font-size: 36px; margin-bottom: 8px; }
+.periodo-comis-banner { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.periodo-comis-rango { font-size: 13px; font-weight: 600; color: var(--text); }
+.periodo-comis-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.periodo-comis-edit { font-size: 12px; color: var(--green); cursor: pointer; white-space: nowrap; background: none; border: none; font-family: 'DM Sans', sans-serif; font-weight: 600; padding: 4px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">Cobran<span>zas</span></div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="openModal('modal-sueldo')">💰 Sueldo</button>
+    </div>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('cobros',this)">Cobros</button>
+  <button class="tab" onclick="switchTab('ventas',this)">Ventas</button>
+  <button class="tab" onclick="switchTab('resumen',this)">Resumen</button>
+</div>
+
+<!-- TAB COBROS -->
+<div id="view-cobros" class="view active">
+  <div id="banner-periodo-cobros" class="periodo-comis-banner">
+    <div>
+      <div class="periodo-comis-rango" id="banner-cobros-rango">—</div>
+      <div class="periodo-comis-sub">Período de comisiones activo</div>
+    </div>
+    <button class="periodo-comis-edit" onclick="openModal('modal-periodo')">Cambiar cierre</button>
+  </div>
+  <div class="periodo-row">
+    <button class="periodo-btn active" onclick="setPeriodo('cobros','periodo',this)">Este período</button>
+    <button class="periodo-btn" onclick="setPeriodo('cobros','semana',this)">7 días</button>
+  </div>
+  <div class="summary-grid">
+    <div class="stat-card"><div class="stat-label">Cobrado efectivizado</div><div class="stat-value green" id="cobros-total">$0</div></div>
+    <div class="stat-card"><div class="stat-label">Comisión 2%</div><div class="stat-value amber" id="cobros-comision">$0</div></div>
+  </div>
+  <div id="aviso-cheques"></div>
+  <button class="btn btn-primary" style="margin-bottom:8px" onclick="openModal('modal-cobro')">+ Registrar cobro</button>
+  <button class="btn btn-outline" style="margin-bottom:14px" onclick="abrirCamara()">📷 Escanear recibo</button>
+  <div id="lista-cobros"></div>
+</div>
+
+<!-- TAB VENTAS -->
+<div id="view-ventas" class="view">
+  <div id="banner-periodo-ventas" class="periodo-comis-banner">
+    <div>
+      <div class="periodo-comis-rango" id="banner-ventas-rango">—</div>
+      <div class="periodo-comis-sub">Período de comisiones activo</div>
+    </div>
+    <button class="periodo-comis-edit" onclick="openModal('modal-periodo')">Cambiar cierre</button>
+  </div>
+  <div class="periodo-row">
+    <button class="periodo-btn active" onclick="setPeriodo('ventas','periodo',this)">Este período</button>
+    <button class="periodo-btn" onclick="setPeriodo('ventas','semana',this)">7 días</button>
+  </div>
+  <div class="summary-grid">
+    <div class="stat-card"><div class="stat-label">Total vendido</div><div class="stat-value green" id="ventas-total">$0</div></div>
+    <div class="stat-card"><div class="stat-label">Comisión 1,5%</div><div class="stat-value amber" id="ventas-comision">$0</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Registrar ventas</div>
+    <div class="field"><label>Merilex PRO (veterinaria) — $</label><input type="number" id="venta-merilex" placeholder="0" min="0" step="1"></div>
+    <div class="field"><label>Accesorios mascotas — $</label><input type="number" id="venta-accesorios" placeholder="0" min="0" step="1"></div>
+    <div class="field-row">
+      <div class="field"><label>Fecha</label><input type="date" id="venta-fecha"></div>
+      <div class="field"><label>Nota</label><input type="text" id="venta-nota" placeholder="opcional"></div>
+    </div>
+    <button class="btn btn-primary" onclick="guardarVenta()">Guardar ventas</button>
+  </div>
+  <div id="lista-ventas"></div>
+</div>
+
+<!-- TAB RESUMEN -->
+<div id="view-resumen" class="view">
+  <div id="banner-periodo-resumen" class="periodo-comis-banner">
+    <div>
+      <div class="periodo-comis-rango" id="banner-resumen-rango">—</div>
+      <div class="periodo-comis-sub">Período de comisiones activo</div>
+    </div>
+    <button class="periodo-comis-edit" onclick="openModal('modal-periodo')">Cambiar cierre</button>
+  </div>
+  <div class="periodo-row">
+    <button class="periodo-btn active" onclick="setPeriodo('resumen','periodo',this)">Este período</button>
+    <button class="periodo-btn" onclick="setPeriodo('resumen','semana',this)">7 días</button>
+  </div>
+  <div class="card" style="margin-bottom:10px">
+    <div class="card-title">Comisiones del período</div>
+    <div class="desglose-row"><span class="desglose-label">Ventas (<span id="r-ventas-total">$0</span>) × 1,5%</span><span class="desglose-valor pos" id="r-comis-ventas">$0</span></div>
+    <div class="desglose-row"><span class="desglose-label">Cobros efectivizados × 2%</span><span class="desglose-valor pos" id="r-comis-cobros">$0</span></div>
+    <div class="desglose-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
+      <span class="desglose-label" style="font-weight:600">Total comisiones</span>
+      <span class="desglose-valor pos" id="r-total-comis">$0</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Sueldo estimado</div>
+    <div class="field-row" style="margin-bottom:10px">
+      <div class="field"><label>Sueldo básico ($)</label><input type="number" id="s-basico" value="51980" min="0" step="1" oninput="renderResumen()"></div>
+      <div class="field"><label>FONASA</label>
+        <select id="s-fonasa" onchange="renderResumen()">
+          <option value="0.045">Sin hijos — 4,5%</option>
+          <option value="0.065">Cónyuge — 6,5%</option>
+          <option value="0.06">Hijos — 6%</option>
+          <option value="0.08">Hijos+cónyuge — 8%</option>
+        </select>
+      </div>
+    </div>
+    <div class="desglose-row"><span class="desglose-label">Sueldo básico</span><span class="desglose-valor" id="s-r-basico">$0</span></div>
+    <div class="desglose-row"><span class="desglose-label">+ Comisiones</span><span class="desglose-valor pos" id="s-r-comis">$0</span></div>
+    <div class="desglose-row"><span class="desglose-label">= Nominal gravado</span><span class="desglose-valor" id="s-r-nominal">$0</span></div>
+    <div class="desglose-row"><span class="desglose-label">BPS 15%</span><span class="desglose-valor neg" id="s-r-bps">$0</span></div>
+    <div class="desglose-row"><span class="desglose-label">FONASA</span><span class="desglose-valor neg" id="s-r-fonasa">$0</span></div>
+    <div class="desglose-row"><span class="desglose-label">FRL 0,1%</span><span class="desglose-valor neg" id="s-r-frl">$0</span></div>
+    <div class="desglose-row"><span class="desglose-label">IRPF</span><span class="desglose-valor neg" id="s-r-irpf">$0</span></div>
+    <div class="desglose-row total"><span class="desglose-label">Líquido estimado</span><span class="desglose-valor" id="s-r-liquido">$0</span></div>
+  </div>
+  <p style="font-size:12px;color:var(--muted);text-align:center;padding-bottom:1rem">Cheques pendientes excluidos hasta su fecha de acreditación</p>
+</div>
+
+<!-- MODAL COBRO -->
+<div class="modal-backdrop" id="modal-cobro">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-cobro')">×</button>
+    <div class="modal-title" id="modal-cobro-title">Registrar cobro</div>
+
+    <div id="scan-info" class="scan-info" style="display:none"></div>
+
+    
+    <div class="field"><label>Cliente (opcional)</label><input type="text" id="c-cliente" placeholder="Nombre del cliente"></div>
+    <div class="field-row">
+      <div class="field"><label>N° de recibo</label><input type="text" id="c-recibo" placeholder="ej: 001234"></div>
+      <div class="field"><label>Fecha del recibo</label><input type="date" id="c-fecha"></div>
+    </div>
+
+    <p class="seccion-label">Forma de pago</p>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Activá una o varias. Un recibo puede tener pagos mixtos.</p>
+
+    <div class="pago-bloque">
+      <div class="pago-bloque-header">
+        <div class="pago-toggle">
+          <input type="checkbox" id="chk-efectivo" onchange="togglePago('efectivo')">
+          <label for="chk-efectivo">Efectivo</label>
+        </div>
+        <span class="badge badge-ef">Comis. inmediata</span>
+      </div>
+      <div class="pago-cuerpo" id="pago-efectivo">
+        <div class="field" style="margin-bottom:0"><label>Monto ($)</label><input type="number" id="monto-efectivo" placeholder="0" min="0" step="1" oninput="updatePreview()"></div>
+      </div>
+    </div>
+
+    <div class="pago-bloque">
+      <div class="pago-bloque-header">
+        <div class="pago-toggle">
+          <input type="checkbox" id="chk-deposito" onchange="togglePago('deposito')">
+          <label for="chk-deposito">Depósito</label>
+        </div>
+        <span class="badge badge-dep">Comis. inmediata</span>
+      </div>
+      <div class="pago-cuerpo" id="pago-deposito">
+        <div class="field" style="margin-bottom:0"><label>Monto ($)</label><input type="number" id="monto-deposito" placeholder="0" min="0" step="1" oninput="updatePreview()"></div>
+      </div>
+    </div>
+
+    <div class="pago-bloque">
+      <div class="pago-bloque-header">
+        <div class="pago-toggle">
+          <input type="checkbox" id="chk-cheque" onchange="togglePago('cheque')">
+          <label for="chk-cheque">Cheque</label>
+        </div>
+        <span class="badge badge-chq-pend">Comis. al acreditar</span>
+      </div>
+      <div class="pago-cuerpo" id="pago-cheque">
+        <div class="field"><label>Monto ($)</label><input type="number" id="monto-cheque" placeholder="0" min="0" step="1" oninput="updatePreview()"></div>
+        <div class="field" style="margin-bottom:0"><label>Fecha de acreditación</label><input type="date" id="fecha-cheque"></div>
+      </div>
+    </div>
+
+    <div class="total-preview" id="total-preview" style="display:none">
+      <span class="total-preview-label">Total recibo</span>
+      <span class="total-preview-monto" id="total-preview-monto">$0</span>
+    </div>
+
+    <div class="field"><label>Nota (opcional)</label><input type="text" id="c-nota" placeholder=""></div>
+    <button class="btn btn-primary" onclick="guardarCobro()">Guardar cobro</button>
+  </div>
+</div>
+
+<!-- MODAL PERÍODO DE COMISIONES -->
+<div class="modal-backdrop" id="modal-periodo">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-periodo')">×</button>
+    <div class="modal-title">Período de comisiones</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">El período va desde el día siguiente al cierre anterior hasta la fecha de cierre del mes actual.</p>
+    <div class="field">
+      <label>Fecha de cierre del período anterior</label>
+      <input type="date" id="periodo-desde-cierre">
+      <p style="font-size:12px;color:var(--muted);margin-top:4px">Las comisiones empiezan a contar desde el día siguiente a esta fecha.</p>
+    </div>
+    <div class="field">
+      <label>Fecha de cierre del período actual</label>
+      <input type="date" id="periodo-hasta-cierre">
+      <p style="font-size:12px;color:var(--muted);margin-top:4px">Último día incluido en este período.</p>
+    </div>
+    <div class="aviso" id="periodo-preview" style="display:none;margin-bottom:12px"></div>
+    <button class="btn btn-primary" onclick="guardarPeriodo()">Guardar período</button>
+  </div>
+</div>
+
+<!-- MODAL CÁMARA -->
+<div class="modal-backdrop" id="modal-camara">
+  <div class="modal">
+    <button class="modal-close" onclick="cerrarCamara()">×</button>
+    <div class="modal-title">Escanear recibo</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Encuadrá el recibo dentro del rectángulo verde</p>
+    <div id="video-container">
+      <video id="cam-video" autoplay playsinline muted></video>
+      <div class="cam-guide"></div>
+    </div>
+    <button class="btn btn-primary" style="margin-bottom:8px" onclick="tomarFoto()">📷 Tomar foto</button>
+    <button class="btn btn-outline" onclick="cerrarCamara()">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL SUELDO RÁPIDO -->
+<div class="modal-backdrop" id="modal-sueldo">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-sueldo')">×</button>
+    <div class="modal-title">Calculadora de sueldo</div>
+    <div class="field"><label>Sueldo básico ($)</label><input type="number" id="m-basico" value="51980" min="0" oninput="calcModalSueldo()"></div>
+    <div class="field"><label>Comisiones totales ($)</label><input type="number" id="m-comisiones" value="0" min="0" oninput="calcModalSueldo()"></div>
+    <div class="field"><label>FONASA</label>
+      <select id="m-fonasa" onchange="calcModalSueldo()">
+        <option value="0.045">Sin hijos ni cónyuge — 4,5%</option>
+        <option value="0.065">Con cónyuge — 6,5%</option>
+        <option value="0.06">Con hijos — 6%</option>
+        <option value="0.08">Con hijos y cónyuge — 8%</option>
+      </select>
+    </div>
+    <div class="card" style="margin-top:4px">
+      <div class="desglose-row"><span class="desglose-label">Nominal</span><span class="desglose-valor" id="m-r-nominal">$0</span></div>
+      <div class="desglose-row"><span class="desglose-label">BPS 15%</span><span class="desglose-valor neg" id="m-r-bps">$0</span></div>
+      <div class="desglose-row"><span class="desglose-label">FONASA</span><span class="desglose-valor neg" id="m-r-fonasa">$0</span></div>
+      <div class="desglose-row"><span class="desglose-label">FRL 0,1%</span><span class="desglose-valor neg" id="m-r-frl">$0</span></div>
+      <div class="desglose-row"><span class="desglose-label">IRPF</span><span class="desglose-valor neg" id="m-r-irpf">$0</span></div>
+      <div class="desglose-row total"><span class="desglose-label">Líquido</span><span class="desglose-valor" id="m-r-liquido">$0</span></div>
+    </div>
+  </div>
+</div>
+
+<canvas id="cam-canvas" style="display:none"></canvas>
+
+<script>
+const COBROS_KEY  = 'merilex_cobros';
+const VENTAS_KEY  = 'merilex_ventas';
+const PERIODO_KEY = 'merilex_periodo';
+function getCobros(){ try{ return JSON.parse(localStorage.getItem(COBROS_KEY)||'[]'); }catch(e){ return []; } }
+function saveCobros(d){ localStorage.setItem(COBROS_KEY, JSON.stringify(d)); }
+function getVentas(){ try{ return JSON.parse(localStorage.getItem(VENTAS_KEY)||'[]'); }catch(e){ return []; } }
+function saveVentas(d){ localStorage.setItem(VENTAS_KEY, JSON.stringify(d)); }
+function getPeriodo(){ try{ return JSON.parse(localStorage.getItem(PERIODO_KEY)||'null'); }catch(e){ return null; } }
+function savePeriodo(d){ localStorage.setItem(PERIODO_KEY, JSON.stringify(d)); }
+
+// Calcula el período activo: desde día siguiente al cierre anterior hasta cierre actual
+function getPeriodoActivo() {
+  const p = getPeriodo();
+  if (!p || !p.desdeCierre || !p.hastaCierre) return null;
+  // desde = día siguiente al cierre anterior
+  const desdeD = new Date(p.desdeCierre + 'T12:00');
+  desdeD.setDate(desdeD.getDate() + 1);
+  const desde = desdeD.toISOString().split('T')[0];
+  return { desde, hasta: p.hastaCierre };
+}
+
+function fmtPeriodoBanner(p) {
+  if (!p) return 'Sin período configurado';
+  return fmtF(p.desde) + ' al ' + fmtF(p.hasta);
+}
+
+function actualizarBanners() {
+  const p = getPeriodoActivo();
+  const txt = p ? fmtPeriodoBanner(p) : 'Sin período configurado — tocá "Cambiar cierre"';
+  ['cobros','ventas','resumen'].forEach(s => {
+    const el = document.getElementById('banner-'+s+'-rango');
+    if (el) el.textContent = txt;
+  });
+}
+
+function guardarPeriodo() {
+  const desdeCierre = document.getElementById('periodo-desde-cierre').value;
+  const hastaCierre = document.getElementById('periodo-hasta-cierre').value;
+  if (!desdeCierre || !hastaCierre) { alert('Completá ambas fechas'); return; }
+  if (desdeCierre >= hastaCierre) { alert('El cierre anterior debe ser antes que el cierre actual'); return; }
+  savePeriodo({ desdeCierre, hastaCierre });
+  closeModal('modal-periodo');
+  actualizarBanners();
+  renderAll();
+}
+
+let periodos = { cobros:'periodo', ventas:'periodo', resumen:'periodo' };
+let mediaStream = null;
+
+window.addEventListener('DOMContentLoaded', () => {
+  const hoy = new Date().toISOString().split('T')[0];
+  document.getElementById('c-fecha').value = hoy;
+  document.getElementById('venta-fecha').value = hoy;
+  // Pre-llenar modal período con valores guardados
+  const p = getPeriodo();
+  if (p) {
+    document.getElementById('periodo-desde-cierre').value = p.desdeCierre || '';
+    document.getElementById('periodo-hasta-cierre').value = p.hastaCierre || '';
+  }
+  actualizarBanners();
+  renderAll();
+  calcModalSueldo();
+});
+
+// Preview en tiempo real del período
+document.addEventListener('DOMContentLoaded', () => {
+  ['periodo-desde-cierre','periodo-hasta-cierre'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', previewPeriodo);
+  });
+});
+
+function previewPeriodo() {
+  const dc = document.getElementById('periodo-desde-cierre').value;
+  const hc = document.getElementById('periodo-hasta-cierre').value;
+  const prev = document.getElementById('periodo-preview');
+  if (dc && hc && dc < hc) {
+    const desdeD = new Date(dc + 'T12:00');
+    desdeD.setDate(desdeD.getDate() + 1);
+    const desde = desdeD.toISOString().split('T')[0];
+    prev.style.display = 'block';
+    prev.textContent = 'Período: ' + fmtF(desde) + ' al ' + fmtF(hc);
+  } else {
+    prev.style.display = 'none';
+  }
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('view-' + tab).classList.add('active');
+  renderAll();
+}
+
+function setPeriodo(scope, p, btn) {
+  periodos[scope] = p;
+  btn.closest('.periodo-row').querySelectorAll('.periodo-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAll();
+}
+
+function filtrar(arr, campo, periodo) {
+  const hoy = new Date();
+  if (periodo === 'periodo') {
+    const p = getPeriodoActivo();
+    if (!p) return arr; // sin período configurado muestra todo
+    return arr.filter(item => item[campo] >= p.desde && item[campo] <= p.hasta);
+  }
+  return arr.filter(item => {
+    const d = new Date(item[campo] + 'T12:00');
+    if (periodo === 'semana') return (hoy - d) / 86400000 < 7 && d <= hoy;
+    return true; // 'todo'
+  });
+}
+
+function fmt(n){ return '$' + Math.round(n).toLocaleString('es-UY'); }
+function fmtF(iso){ if(!iso) return ''; const d=new Date(iso+'T12:00'); return d.toLocaleDateString('es-UY',{day:'2-digit',month:'2-digit',year:'2-digit'}); }
+
+function togglePago(tipo) {
+  const chk = document.getElementById('chk-' + tipo);
+  const cuerpo = document.getElementById('pago-' + tipo);
+  cuerpo.classList.toggle('visible', chk.checked);
+  if (!chk.checked) {
+    document.getElementById('monto-' + tipo).value = '';
+    if (tipo === 'cheque') document.getElementById('fecha-cheque').value = '';
+  }
+  updatePreview();
+}
+
+function updatePreview() {
+  const ef  = parseFloat(document.getElementById('monto-efectivo').value) || 0;
+  const dep = parseFloat(document.getElementById('monto-deposito').value) || 0;
+  const chq = parseFloat(document.getElementById('monto-cheque').value)   || 0;
+  const total = ef + dep + chq;
+  const el = document.getElementById('total-preview');
+  if (total > 0) {
+    document.getElementById('total-preview-monto').textContent = fmt(total);
+    el.style.display = 'flex';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function guardarCobro() {
+  const cliente = document.getElementById('c-cliente').value.trim();
+  const recibo  = document.getElementById('c-recibo').value.trim();
+  const fecha   = document.getElementById('c-fecha').value;
+  const nota    = document.getElementById('c-nota').value.trim();
+  if (!fecha) { alert('Ingresá la fecha'); return; }
+
+  const pagos = [];
+  for (const t of ['efectivo','deposito','cheque']) {
+    if (!document.getElementById('chk-' + t).checked) continue;
+    const monto = parseFloat(document.getElementById('monto-' + t).value) || 0;
+    if (monto <= 0) { alert('Ingresá el monto para ' + t); return; }
+    const pago = { tipo: t, monto };
+    if (t === 'cheque') {
+      const fc = document.getElementById('fecha-cheque').value;
+      if (!fc) { alert('Ingresá la fecha de acreditación del cheque'); return; }
+      pago.fechaCheque = fc;
+    }
+    pagos.push(pago);
+  }
+  if (pagos.length === 0) { alert('Seleccioná al menos una forma de pago'); return; }
+
+  const cobros = getCobros();
+  cobros.unshift({ id: Date.now(), cliente, recibo, fecha, nota, pagos });
+  saveCobros(cobros);
+  closeModal('modal-cobro');
+  limpiarFormCobro();
+  renderAll();
+}
+
+function limpiarFormCobro() {
+  ['c-cliente','c-recibo','c-nota'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('c-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('scan-info').style.display = 'none';
+  document.getElementById('modal-cobro-title').textContent = 'Registrar cobro';
+  for (const t of ['efectivo','deposito','cheque']) {
+    document.getElementById('chk-'+t).checked = false;
+    document.getElementById('pago-'+t).classList.remove('visible');
+    document.getElementById('monto-'+t).value = '';
+  }
+  document.getElementById('fecha-cheque').value = '';
+  document.getElementById('total-preview').style.display = 'none';
+}
+
+function eliminarCobro(id) {
+  if (!confirm('¿Eliminás este cobro?')) return;
+  saveCobros(getCobros().filter(c => c.id !== id));
+  renderAll();
+}
+
+function guardarVenta() {
+  const merilex    = parseFloat(document.getElementById('venta-merilex').value)    || 0;
+  const accesorios = parseFloat(document.getElementById('venta-accesorios').value) || 0;
+  const fecha      = document.getElementById('venta-fecha').value;
+  const nota       = document.getElementById('venta-nota').value.trim();
+  if (!fecha || (merilex === 0 && accesorios === 0)) { alert('Ingresá al menos un monto y la fecha'); return; }
+  const ventas = getVentas();
+  ventas.unshift({ id: Date.now(), merilex, accesorios, total: merilex + accesorios, fecha, nota });
+  saveVentas(ventas);
+  document.getElementById('venta-merilex').value = '';
+  document.getElementById('venta-accesorios').value = '';
+  document.getElementById('venta-nota').value = '';
+  renderAll();
+}
+
+function eliminarVenta(id) {
+  if (!confirm('¿Eliminás este registro?')) return;
+  saveVentas(getVentas().filter(v => v.id !== id));
+  renderAll();
+}
+
+// IRPF 2026
+const BPC = 6864;
+const FRANJAS = [
+  {hasta:7*BPC,tasa:0},{hasta:10*BPC,tasa:.10},{hasta:15*BPC,tasa:.15},
+  {hasta:30*BPC,tasa:.24},{hasta:50*BPC,tasa:.25},{hasta:75*BPC,tasa:.27},
+  {hasta:115*BPC,tasa:.31},{hasta:Infinity,tasa:.36}
+];
+function calcIRPF(nominal, aportes) {
+  const tasaDed = nominal < 15*BPC ? 0.14 : 0.08;
+  let bruto = 0, prev = 0;
+  for (const f of FRANJAS) {
+    if (nominal <= prev) break;
+    bruto += (Math.min(nominal, f.hasta) - prev) * f.tasa;
+    prev = f.hasta;
+  }
+  return Math.max(0, bruto - aportes * tasaDed);
+}
+
+function calcLiquido(basico, comis, fonasaRate) {
+  const nominal = basico + comis;
+  const bps = nominal * 0.15;
+  const fonasa = nominal * fonasaRate;
+  const frl = nominal * 0.001;
+  const aportes = bps + fonasa + frl;
+  const irpf = calcIRPF(nominal, aportes);
+  return { nominal, bps, fonasa, frl, irpf, liquido: nominal - aportes - irpf };
+}
+
+function calcModalSueldo() {
+  const basico = parseFloat(document.getElementById('m-basico').value)||0;
+  const comis  = parseFloat(document.getElementById('m-comisiones').value)||0;
+  const rate   = parseFloat(document.getElementById('m-fonasa').value);
+  const r = calcLiquido(basico, comis, rate);
+  document.getElementById('m-r-nominal').textContent = fmt(r.nominal);
+  document.getElementById('m-r-bps').textContent     = '−'+fmt(r.bps);
+  document.getElementById('m-r-fonasa').textContent  = '−'+fmt(r.fonasa);
+  document.getElementById('m-r-frl').textContent     = '−'+fmt(r.frl);
+  document.getElementById('m-r-irpf').textContent    = '−'+fmt(r.irpf);
+  document.getElementById('m-r-liquido').textContent = fmt(r.liquido);
+}
+
+function pagoEfectivizado(p) {
+  if (p.tipo !== 'cheque') return true;
+  return p.fechaCheque && p.fechaCheque <= new Date().toISOString().split('T')[0];
+}
+
+function renderCobros() {
+  const hoy = new Date().toISOString().split('T')[0];
+  const todos = getCobros();
+  const filtrados = filtrar(todos, 'fecha', periodos.cobros);
+  const totalEfect = filtrados.reduce((s,c) => s + c.pagos.filter(pagoEfectivizado).reduce((ss,p)=>ss+p.monto,0), 0);
+  document.getElementById('cobros-total').textContent    = fmt(totalEfect);
+  document.getElementById('cobros-comision').textContent = fmt(totalEfect * 0.02);
+
+  const cheqHoy   = [], cheqProx = [];
+  todos.forEach(c => c.pagos.forEach(p => {
+    if (p.tipo !== 'cheque') return;
+    if (p.fechaCheque === hoy) cheqHoy.push({...p, cliente: c.cliente});
+    else if (p.fechaCheque > hoy) cheqProx.push({...p, cliente: c.cliente});
+  }));
+
+  const avisoEl = document.getElementById('aviso-cheques');
+  if (cheqHoy.length) {
+    avisoEl.innerHTML = `<div class="aviso">⚠️ Hoy se acreditan ${cheqHoy.length} cheque(s): ${cheqHoy.map(c=>`${c.cliente} ${fmt(c.monto)}`).join(' | ')}</div>`;
+  } else if (cheqProx.length) {
+    cheqProx.sort((a,b)=>a.fechaCheque.localeCompare(b.fechaCheque));
+    const p = cheqProx[0];
+    avisoEl.innerHTML = `<div class="aviso">⏳ Próximo cheque: ${fmtF(p.fechaCheque)} — ${p.cliente} — ${fmt(p.monto)}</div>`;
+  } else { avisoEl.innerHTML = ''; }
+
+  const el = document.getElementById('lista-cobros');
+  if (!filtrados.length) { el.innerHTML='<div class="empty"><div class="empty-icon">📋</div><p>No hay cobros en este período</p></div>'; return; }
+
+  el.innerHTML = filtrados.map(c => {
+    const totalRec = c.pagos.reduce((s,p)=>s+p.monto,0);
+    const lineas = c.pagos.map(p => {
+      const ef = pagoEfectivizado(p);
+      const bc = p.tipo==='efectivo'?'badge-ef':p.tipo==='deposito'?'badge-dep':ef?'badge-chq-ok':'badge-chq-pend';
+      const bl = p.tipo==='efectivo'?'Efectivo':p.tipo==='deposito'?'Depósito':ef?'Cheque ✓':`Cheque · ${fmtF(p.fechaCheque)}`;
+      return `<div class="pago-linea">
+        <div class="pago-linea-left">
+          <span class="badge ${bc}">${bl}</span>
+          <span class="pago-monto">${fmt(p.monto)}</span>
+        </div>
+        <span class="${ef?'pago-comis':'pago-pend-txt'}">${ef?'comis. '+fmt(p.monto*0.02):'pendiente'}</span>
+      </div>`;
+    }).join('');
+    return `<div class="cobro-item">
+      <div class="cobro-top">
+        <div>
+          <div class="cobro-cliente">${c.cliente}</div>
+          <div class="cobro-meta">${fmtF(c.fecha)}${c.recibo?' · Rec. '+c.recibo:''}</div>
+        </div>
+        <div class="cobro-total">${fmt(totalRec)}</div>
+      </div>
+      <div class="pagos-lista">${lineas}</div>
+      ${c.nota?`<p style="font-size:13px;color:var(--muted);margin-top:8px">${c.nota}</p>`:''}
+      <div class="cobro-acciones"><button class="btn btn-outline btn-sm" onclick="eliminarCobro(${c.id})">Eliminar</button></div>
+    </div>`;
+  }).join('');
+}
+
+function renderVentas() {
+  const filtradas = filtrar(getVentas(), 'fecha', periodos.ventas);
+  const total = filtradas.reduce((s,v)=>s+v.total,0);
+  document.getElementById('ventas-total').textContent    = fmt(total);
+  document.getElementById('ventas-comision').textContent = fmt(total*0.015);
+  const el = document.getElementById('lista-ventas');
+  if (!filtradas.length) { el.innerHTML='<div class="empty"><div class="empty-icon">📦</div><p>No hay ventas en este período</p></div>'; return; }
+  el.innerHTML = filtradas.map(v=>`
+    <div class="cobro-item">
+      <div class="cobro-top">
+        <div>
+          <div class="cobro-cliente">${fmtF(v.fecha)}${v.nota?' · '+v.nota:''}</div>
+          <div class="cobro-meta">${v.merilex>0?'Vet: '+fmt(v.merilex):''}${v.merilex>0&&v.accesorios>0?' · ':''}${v.accesorios>0?'Acces: '+fmt(v.accesorios):''}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="cobro-total">${fmt(v.total)}</div>
+          <div class="pago-comis">comis. ${fmt(v.total*0.015)}</div>
+        </div>
+      </div>
+      <div class="cobro-acciones"><button class="btn btn-outline btn-sm" onclick="eliminarVenta(${v.id})">Eliminar</button></div>
+    </div>`).join('');
+}
+
+function renderResumen() {
+  const cobros = filtrar(getCobros(), 'fecha', periodos.resumen);
+  const ventas = filtrar(getVentas(), 'fecha', periodos.resumen);
+  const totalCobros = cobros.reduce((s,c)=>s+c.pagos.filter(pagoEfectivizado).reduce((ss,p)=>ss+p.monto,0),0);
+  const totalVentas = ventas.reduce((s,v)=>s+v.total,0);
+  const comisV = totalVentas * 0.015;
+  const comisC = totalCobros * 0.02;
+  document.getElementById('r-ventas-total').textContent = fmt(totalVentas);
+  document.getElementById('r-comis-ventas').textContent = fmt(comisV);
+  document.getElementById('r-comis-cobros').textContent = fmt(comisC);
+  document.getElementById('r-total-comis').textContent  = fmt(comisV + comisC);
+
+  const basico = parseFloat(document.getElementById('s-basico').value)||0;
+  const rate   = parseFloat(document.getElementById('s-fonasa').value);
+  const comis  = comisV + comisC;
+  const r = calcLiquido(basico, comis, rate);
+  document.getElementById('s-r-basico').textContent  = fmt(basico);
+  document.getElementById('s-r-comis').textContent   = fmt(comis);
+  document.getElementById('s-r-nominal').textContent = fmt(r.nominal);
+  document.getElementById('s-r-bps').textContent     = '−'+fmt(r.bps);
+  document.getElementById('s-r-fonasa').textContent  = '−'+fmt(r.fonasa);
+  document.getElementById('s-r-frl').textContent     = '−'+fmt(r.frl);
+  document.getElementById('s-r-irpf').textContent    = '−'+fmt(r.irpf);
+  document.getElementById('s-r-liquido').textContent = fmt(r.liquido);
+}
+
+function renderAll() { renderCobros(); renderVentas(); renderResumen(); }
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'modal-periodo') {
+    const p = getPeriodo();
+    if (p) {
+      document.getElementById('periodo-desde-cierre').value = p.desdeCierre || '';
+      document.getElementById('periodo-hasta-cierre').value = p.hastaCierre || '';
+      previewPeriodo();
+    }
+  }
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  if (id === 'modal-cobro') limpiarFormCobro();
+}
+document.querySelectorAll('.modal-backdrop').forEach(m => {
+  m.addEventListener('click', e => {
+    if (e.target === m) { if (m.id === 'modal-camara') cerrarCamara(); else closeModal(m.id); }
+  });
+});
+
+function abrirCamara() {
+  document.getElementById('file-camara').click();
+}
+
+function cerrarCamara() {}
+
+async function procesarImagen(file) {
+  if (!file) return;
+  openModal('modal-cobro');
+  document.getElementById('modal-cobro-title').textContent = 'Procesando...';
+  const si = document.getElementById('scan-info');
+  si.style.display = 'block';
+  si.innerHTML = 'Leyendo imagen...';
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const base64 = e.target.result.split(',')[1];
+    // Usar el tipo real del archivo, normalizar HEIC a jpeg
+    let mediaType = file.type || 'image/jpeg';
+    if (mediaType === 'image/heic' || mediaType === 'image/heif') mediaType = 'image/jpeg';
+    if (!['image/jpeg','image/png','image/gif','image/webp'].includes(mediaType)) mediaType = 'image/jpeg';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+            { type: 'text', text: `Analizá esta imagen. Puede ser un cheque bancario uruguayo o un recibo de cobro de Merilex S.A.
+
+SI ES UN CHEQUE BANCARIO (Santander, BROU, BBVA, etc.):
+- Monto: esquina superior derecha (ej: "U$S 425,-" o "421,87") — la coma es decimal europea, convertila a punto decimal
+- Fecha de acreditación: campo "PÁGUESE DESDE EL" en formato DD-MM-AAAA → convertir a YYYY-MM-DD
+- Número: campos SERIE + NÚMERO (ej: "74 319450")
+- NO incluyas cliente — los cheques pueden ser de terceros
+- El tipo siempre es "cheque"
+
+SI ES UN RECIBO MERILEX:
+- Número de recibo: esquina superior derecha (campo "Nº")
+- Cliente: campo "Recibimos de"
+- Fecha: "Montevideo, DD de MES de 20XX" → convertir a YYYY-MM-DD
+- Banco con fecha vto futura → tipo "cheque" con fechaCheque. Sin fecha → tipo "deposito". Efectivo → tipo "efectivo"
+
+Respondé ÚNICAMENTE con este JSON sin texto extra ni backticks:
+{
+  "recibo": "número",
+  "fecha": "YYYY-MM-DD",
+  "pagos": [
+    {"tipo": "cheque", "monto": 425.00, "fechaCheque": "2026-10-07"}
+  ]
+}
+
+Reglas: monto como número con punto decimal. Solo incluí los tipos con monto > 0. No incluyas "cliente" si es cheque.` }
+          ]
+        }]
+      })
+    });
+    const data = await res.json();
+    const txt = data.content?.[0]?.text || '';
+    let parsed = null;
+    try { parsed = JSON.parse(txt.replace(/```json|```/g,'').trim()); } catch(e){}
+
+    document.getElementById('modal-cobro-title').textContent = 'Registrar cobro';
+
+    if (parsed) {
+      mostrarConfirmacionOCR(parsed, si);
+    } else {
+      si.style.display = 'block';
+      si.innerHTML = 'No se pudo leer automáticamente. Completá los datos manualmente.';
+    }
+    } catch(e) {
+      document.getElementById('modal-cobro-title').textContent = 'Registrar cobro';
+      si.style.display = 'block';
+      si.innerHTML = 'Error: ' + e.message + '. Completá los datos manualmente.';
+      console.error('OCR error:', e);
+    }
+  };
+  reader.readAsDataURL(file);
+}
+</script>
+
+<!-- Popup confirmación OCR -->
+<input type="file" id="file-camara" accept="image/*" capture="environment" style="display:none" onchange="procesarImagen(this.files[0]);this.value='';">
+<div id="ocr-confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none">
+  <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:white;border-radius:16px;padding:20px;width:min(340px,90%);max-height:80vh;overflow-y:auto">
+    <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:4px">&#128247; Datos leídos</div>
+    <div style="font-size:12px;color:#888;margin-bottom:14px">Verificá y corregí si es necesario</div>
+    <div id="ocr-confirm-fields"></div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button onclick="cancelarOCR()" style="flex:1;padding:11px;border:2px solid #d0d0d0;border-radius:10px;background:white;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Cancelar</button>
+      <button onclick="confirmarOCR()" style="flex:1;padding:11px;border:none;border-radius:10px;background:#1a7a4a;color:white;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Confirmar</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
